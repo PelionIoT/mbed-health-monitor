@@ -105,7 +105,7 @@ void HealthMonitor::spo2_range()
     spo2_init = true;    
 }
 
-void HealthMonitor::read_spo2(uint32_t *spo2, uint32_t *hr)
+bool HealthMonitor::read_spo2(uint32_t *spo2, uint32_t *hr)
 {
     if(!spo2_init)
         spo2_range();
@@ -128,6 +128,7 @@ void HealthMonitor::read_spo2(uint32_t *spo2, uint32_t *hr)
     }
     maxim_heart_rate_and_oxygen_saturation(aun_ir_buffer, n_ir_buffer_length, aun_red_buffer, &n_sp02, &ch_spo2_valid, &n_heart_rate, &ch_hr_valid); 
     //spo2_range();
+    /**
     printf("red=");
     printf("%i", aun_red_buffer[i]);
     printf(", ir=");
@@ -136,8 +137,10 @@ void HealthMonitor::read_spo2(uint32_t *spo2, uint32_t *hr)
     printf("HRvalid=%i, ", ch_hr_valid);
     printf("SpO2=%i, ", n_sp02);
     printf("SPO2Valid=%i\n\r", ch_spo2_valid);
+    **/
     *spo2 = n_sp02;
     *hr = n_heart_rate;
+    return (ch_spo2_valid == 1);
 }
 
 int HealthMonitor::init_pmic() {

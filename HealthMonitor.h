@@ -33,7 +33,7 @@ public:
     HealthMonitor();
     ~HealthMonitor();
     int init();
-    void read_spo2(uint32_t *spo2, uint32_t *hr);
+    bool  read_spo2(uint32_t *spo2, uint32_t *hr);
     void read_ecg(uint8_t* data); 
 
 private:
