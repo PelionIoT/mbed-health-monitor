@@ -48,6 +48,7 @@ int HealthMonitor::init()
     // used by the MAX30001
     NVIC_SetPriority(SPI1_IRQn, 0);
     result += init_pulse_ox();
+    result += init_ecg();
     return result;
 }
 
