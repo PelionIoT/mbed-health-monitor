@@ -33,12 +33,13 @@ public:
     HealthMonitor();
     ~HealthMonitor();
     int init();
-    bool  read_spo2(uint32_t *spo2, uint32_t *hr);
-    void read_ecg(uint8_t* data); 
+    bool read_spo2(uint32_t *spo2);
+    uint8_t read_hr();
 
 private:
     I2C i2c2;
     SPI spi; // used by MAX30001
+    void read_ecg(uint8_t* data); 
     int init_pulse_ox();
     int init_ecg();
     int init_pmic();

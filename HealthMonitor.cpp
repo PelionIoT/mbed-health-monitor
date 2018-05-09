@@ -14,6 +14,32 @@
  * limitations under the License.
  */
 
+/// Initialization values for ECG_InitStart()
+#define EN_ECG     0b1
+#define OPENP      0b1
+#define OPENN      0b1
+#define POL        0b0
+#define CALP_SEL   0b10
+#define CALN_SEL   0b11
+#define E_FIT      31
+#define RATE       0b00
+#define GAIN       0b00
+#define DHPF       0b0
+#define DLPF       0b01
+/// Initialization values for CAL_InitStart() 
+#define EN_VCAL  0b1
+#define VMODE    0b1
+#define VMAG     0b1
+#define FCAL     0b011
+#define THIGH    0x7FF
+#define FIFTY    0b0
+/// Initializaton values for Rbias_FMSTR_Init()
+#define EN_RBIAS 0b01 
+#define RBIASV   0b10
+#define RBIASP   0b1
+#define RBIASN   0b1
+#define FMSTR    0b00
+
 #include "HealthMonitor.h"
 #include "MAX30101.h"
 
@@ -105,7 +131,7 @@ void HealthMonitor::spo2_range()
     spo2_init = true;    
 }
 
-bool HealthMonitor::read_spo2(uint32_t *spo2, uint32_t *hr)
+bool HealthMonitor::read_spo2(uint32_t *spo2)
 {
     if(!spo2_init)
         spo2_range();
@@ -139,7 +165,6 @@ bool HealthMonitor::read_spo2(uint32_t *spo2, uint32_t *hr)
     printf("SPO2Valid=%i\n\r", ch_spo2_valid);
     **/
     *spo2 = n_sp02;
-    *hr = n_heart_rate;
     return (ch_spo2_valid == 1);
 }
 
@@ -155,6 +180,7 @@ int HealthMonitor::init_pmic() {
 }
 
 int HealthMonitor::init_ecg() {
+    uint32_t all;
     max30001_InterruptB.disable_irq();
     max30001_Interrupt2B.disable_irq();
     max30001_InterruptB.mode(PullUp);
@@ -174,17 +200,11 @@ int HealthMonitor::init_ecg() {
                                      MAX30001::MAX30001_INT_2B,   MAX30001::MAX30001_INT_B,    MAX30001::MAX30001_NO_INT,  //  en_lonint_loc,     en_rrint_loc,  en_samp_loc,
                                      MAX30001::MAX30001_INT_ODNR, MAX30001::MAX30001_INT_ODNR);                            //  intb_Type,         int2b_Type)
 
-    max30001.CAL_InitStart(0b1, 0b1, 0b1, 0b011, 0x7FF, 0b0);
-    max30001.ECG_InitStart(0b1, 0b1, 0b1, 0b0, 0b10, 0b11, 0x1F, 0b00,
-                               0b00, 0b0, 0b01);
-    max30001.PACE_InitStart(0b1, 0b0, 0b0, 0b1, 0x0, 0b0, 0b00, 0b0,
-                                  0b0);
-    max30001.BIOZ_InitStart(0b1, 0b1, 0b1, 0b10, 0b11, 0b00, 7, 0b0,
-                                  0b010, 0b0, 0b10, 0b00, 0b00, 2, 0b0,
-                                  0b111, 0b0000);
-    max30001.RtoR_InitStart(0b1, 0b0011, 0b1111, 0b00, 0b0011, 0b000001,
-                                0b00, 0b000, 0b01);
-    max30001.Rbias_FMSTR_Init(0b01, 0b10, 0b1, 0b1, 0b00);
+    max30001.CAL_InitStart(EN_VCAL , VMODE, VMAG, FCAL, THIGH, FIFTY);
+    max30001.ECG_InitStart(EN_ECG, OPENP, OPENN, POL, CALP_SEL, CALN_SEL, E_FIT, RATE, GAIN, DHPF, DLPF);
+    max30001.Rbias_FMSTR_Init(EN_RBIAS, RBIASV, RBIASP, RBIASN,FMSTR);
+    max30001.synch();
+    max30001.reg_read(MAX30001::STATUS, &all);
     return 0;  
 } 
 
@@ -197,4 +217,21 @@ void HealthMonitor::read_ecg(uint8_t* data) {
     for (i = 0; i < sizeof(MAX30001::max30001_bledata_t); i++)
       data[i] = bytePtr[i];
 } 
+
+uint8_t HealthMonitor::read_hr() {
+    uint8_t data[4];    
+    read_ecg(data);
+    float t = 8.0f;
+    float value = 0;
+    float RtoR = (float) ((int) data[1] << 8) + (float) data[0];
+    float fmStr = (float) ((int) data[3] << 8) + (float) data[2];
+    if (fmStr == 0.0f) t = 7.813f;
+    if (RtoR > 0.0f) {
+        value = 60000.0f / (RtoR * t);
+    }
+    // Round up
+    return (uint8_t)(value+0.5);
+}
+
+
 
