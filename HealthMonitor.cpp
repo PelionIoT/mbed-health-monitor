@@ -202,6 +202,8 @@ int HealthMonitor::init_ecg() {
 
     max30001.CAL_InitStart(EN_VCAL , VMODE, VMAG, FCAL, THIGH, FIFTY);
     max30001.ECG_InitStart(EN_ECG, OPENP, OPENN, POL, CALP_SEL, CALN_SEL, E_FIT, RATE, GAIN, DHPF, DLPF);
+    max30001.RtoR_InitStart(0b1, 0b0011, 0b1111, 0b00, 0b0011, 0b000001,
+                                    0b00, 0b000, 0b01);
     max30001.Rbias_FMSTR_Init(EN_RBIAS, RBIASV, RBIASP, RBIASN,FMSTR);
     max30001.synch();
     max30001.reg_read(MAX30001::STATUS, &all);
@@ -215,7 +217,10 @@ void HealthMonitor::read_ecg(uint8_t* data) {
     max30001.ReadHeartrateData(&heartrateData);
     bytePtr = reinterpret_cast<uint8_t *>(&heartrateData);
     for (i = 0; i < sizeof(MAX30001::max30001_bledata_t); i++)
+    {
       data[i] = bytePtr[i];
+      printf("0x%0x\r\n", data[i]);
+    }
 } 
 
 uint8_t HealthMonitor::read_hr() {
