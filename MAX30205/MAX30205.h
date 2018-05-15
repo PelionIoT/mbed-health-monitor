@@ -41,101 +41,101 @@
 
 class MAX30205 {
 public:
-  ///< MAX30205 Register Addresses
-  typedef enum Registers {
-    MAX30205_Temperature   = 0x00,
-    MAX30205_Configuration = 0x01,
-    MAX30205_THYST         = 0x02,
-    MAX30205_TOS           = 0x03
-  } Registers_t;
+    ///< MAX30205 Register Addresses
+    typedef enum Registers {
+        MAX30205_Temperature = 0x00,
+        MAX30205_Configuration = 0x01,
+        MAX30205_THYST = 0x02,
+        MAX30205_TOS = 0x03
+    } Registers_t;
 
-  /**
-  * @brief  Constructor using I2C PinNames
-  * @param sda Pinname for sda
-  * @param scl Pinname for scl
-  */
-  MAX30205(PinName sda, PinName scl, int slaveAddress);
-  /**
-  * @brief  Constructor using pointer to I2C object
-  * @param *i2c Pointer to I2C object
-  */
-  MAX30205(I2C *i2c, int slaveAddress);
+    /**
+     * @brief  Constructor using I2C PinNames
+     * @param sda Pinname for sda
+     * @param scl Pinname for scl
+     */
+    MAX30205(PinName sda, PinName scl, int slaveAddress);
+    /**
+     * @brief  Constructor using pointer to I2C object
+     * @param *i2c Pointer to I2C object
+     */
+    MAX30205(I2C *i2c, int slaveAddress);
 
-  /** @brief Destructor */
-  ~MAX30205(void);
+    /** @brief Destructor */
+    ~MAX30205(void);
 
-  /** @brief Write a register into device at slave address
-  * @param reg register address
-  * @param value value to write
-  */
-  int reg_write(char reg, char value);
+    /** @brief Write a register into device at slave address
+     * @param reg register address
+     * @param value value to write
+     */
+    int reg_write(char reg, char value);
 
-  /**
-  * @brief  Detect the second instance of the MAX30205
-  * @param reg register address
-  * @param value 8-bit value to writes
-  */
-  int reg_read(char reg, char *value);
+    /**
+     * @brief  Detect the second instance of the MAX30205
+     * @param reg register address
+     * @param value 8-bit value to writes
+     */
+    int reg_read(char reg, char *value);
 
-  /**
-  * @brief Write a 16-bit value into device at slave address
-  * @param reg register address
-  * @param value 16-bit value to write
-  */
-  int reg_write16(char reg, uint16_t value);
+    /**
+     * @brief Write a 16-bit value into device at slave address
+     * @param reg register address
+     * @param value 16-bit value to write
+     */
+    int reg_write16(char reg, uint16_t value);
 
-  /**
-  * @brief Read a 16-bit value from a device at a slave address
-  * @param reg register address
-  * @param value pointer to store read value
-  */
-  int reg_read16(char reg, uint16_t *value);
+    /**
+     * @brief Read a 16-bit value from a device at a slave address
+     * @param reg register address
+     * @param value pointer to store read value
+     */
+    int reg_read16(char reg, uint16_t *value);
 
-  /**
-  * @brief Read the temperature from the device into a 16 bit value
-  * @param value pointer to a 16 bit short
-  */
-  int readTemperature(uint16_t *value);
+    /**
+     * @brief Read the temperature from the device into a 16 bit value
+     * @param value pointer to a 16 bit short
+     */
+    int readTemperature(uint16_t *value);
 
-  /**
-  * @brief Read the THYST value from a specified device instance
-  * @param value 16-bit pointer of value to read into
-  */
-  int reg_THYST_Read(uint16_t *value);
+    /**
+     * @brief Read the THYST value from a specified device instance
+     * @param value 16-bit pointer of value to read into
+     */
+    int reg_THYST_Read(uint16_t *value);
 
-  /**
-  * @brief Write the THYST to a device instance
-  * @param value 16-bit value to write
-  */
-  int reg_THYST_Write(uint16_t value);
+    /**
+     * @brief Write the THYST to a device instance
+     * @param value 16-bit value to write
+     */
+    int reg_THYST_Write(uint16_t value);
 
-  /**
-  * @brief Convert a raw temperature value into a float
-  * @param rawTemp raw temperature value to convert
-  * @return the convereted value in degrees C
-  */
-  float toCelsius(unsigned int rawTemp);
+    /**
+     * @brief Convert a raw temperature value into a float
+     * @param rawTemp raw temperature value to convert
+     * @return the convereted value in degrees C
+     */
+    float toCelsius(unsigned int rawTemp);
 
-  /**
-  * @brief Convert the passed in temperature in C to Fahrenheit
-  * @param temperatureC Temperature in C to convert
-  * @returns Returns the converted Fahrenheit value
-  */
-  float toFahrenheit(float temperatureC);
+    /**
+     * @brief Convert the passed in temperature in C to Fahrenheit
+     * @param temperatureC Temperature in C to convert
+     * @returns Returns the converted Fahrenheit value
+     */
+    float toFahrenheit(float temperatureC);
 
 private:
-  /**
-   * @brief I2C pointer
-   */
-  I2C *i2c;
-  /**
-   * @brief Is this object the owner of the I2C object
-   */
-  bool isOwner;
-  /**
-   * @brief Device slave address
-   */
-  int slaveAddress;
+    /**
+     * @brief I2C pointer
+     */
+    I2C *i2c;
+    /**
+     * @brief Is this object the owner of the I2C object
+     */
+    bool isOwner;
+    /**
+     * @brief Device slave address
+     */
+    int slaveAddress;
 };
 
 #endif /* __MAX30205_H_ */
