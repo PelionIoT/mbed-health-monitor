@@ -17,11 +17,12 @@
 #ifndef _HEALTHMONITOR_H_
 #define _HEALTHMONITOR_H_
 
-#include "MAX14720.h"
-#include "MAX30001.h"
-#include "MAX30101.h"
-#include "algorithm.h"
-#include "mbed.h"
+#include <mbed.h>
+
+#include "MAX14720/MAX14720.h"
+#include "MAX30001/MAX30001.h"
+#include "MAX30101/MAX30101.h"
+#include "algorithm/algorithm.h"
 
 #define HVOUT_VOLTAGE 4500 // set to 4500 mV
 #define MAX30101_I2C_SLAVE_ADDR (0xAE)
@@ -36,20 +37,21 @@ public:
     uint8_t read_hr();
 
 private:
-    I2C i2c2;
-    SPI spi; // used by MAX30001
     void read_ecg(uint8_t *data);
     int init_pulse_ox();
     int init_ecg();
     int init_pmic();
     void spo2_range();
-    MAX30101 max30101;
-    InterruptIn max30101_Interrupt;
+
+    I2C i2c2;
+    SPI spi; // used by MAX30001
+    MAX14720 max14720;
     MAX30001 max30001;
     InterruptIn max30001_InterruptB;
     InterruptIn max30001_Interrupt2B;
+    MAX30101 max30101;
+    InterruptIn max30101_Interrupt;
     PwmOut pwmout; /// PWM used as fclk for the MAX30001
-    MAX14720 max14720;
 
     // Variables for spo2 algo
     uint32_t aun_ir_buffer[500];  // IR LED sensor data

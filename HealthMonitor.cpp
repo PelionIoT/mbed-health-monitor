@@ -41,13 +41,17 @@
 #define FMSTR 0b00
 
 #include "HealthMonitor.h"
-#include "MAX30101.h"
 
 HealthMonitor::HealthMonitor()
-    : i2c2(I2C2_SDA, I2C2_SCL), spi(SPI0_MOSI, SPI0_MISO, SPI0_SCK, SPI0_SS),
-      max14720(&i2c2, MAX14720_I2C_SLAVE_ADDR), max30001(&spi),
-      max30001_InterruptB(P3_6), max30001_Interrupt2B(P4_5),
-      max30101_Interrupt(P4_0), pwmout(P1_7), max30101(&i2c2)
+    : i2c2(I2C2_SDA, I2C2_SCL),
+      spi(SPI0_MOSI, SPI0_MISO, SPI0_SCK, SPI0_SS),
+      max14720(&i2c2, MAX14720_I2C_SLAVE_ADDR),
+      max30001(&spi),
+      max30001_InterruptB(P3_6),
+      max30001_Interrupt2B(P4_5),
+      max30101(&i2c2),
+      max30101_Interrupt(P4_0),
+      pwmout(P1_7)
 {
     n_ir_buffer_length = 500; // buffer length of 100 stores 5 seconds of
                               // samples running at 100sps
