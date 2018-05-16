@@ -59,6 +59,12 @@
 #include "algorithm.h"
 #include "mbed.h"
 
+static int32_t an_dx[BUFFER_SIZE - MA4_SIZE]; // delta
+static int32_t an_x[BUFFER_SIZE];             // ir
+static int32_t an_y[BUFFER_SIZE];             // red
+
+#define min(x,y) ((x) < (y) ? (x) : (y))
+
 void maxim_heart_rate_and_oxygen_saturation(
     uint32_t *pun_ir_buffer, int32_t n_ir_buffer_length,
     uint32_t *pun_red_buffer, int32_t *pn_spo2, int8_t *pch_spo2_valid,
@@ -95,8 +101,10 @@ void maxim_heart_rate_and_oxygen_saturation(
 
     int32_t n_y_ac, n_x_ac;
     int32_t n_spo2_calc;
-    int32_t n_y_dc_max, n_x_dc_max;
-    int32_t n_y_dc_max_idx, n_x_dc_max_idx;
+    int32_t n_y_dc_max = 0;
+    int32_t n_x_dc_max = 0;
+    int32_t n_y_dc_max_idx = 0;
+    int32_t n_x_dc_max_idx = 0;
     int32_t an_ratio[5], n_ratio_average;
     int32_t n_nume, n_denom;
     // remove DC of ir signal
