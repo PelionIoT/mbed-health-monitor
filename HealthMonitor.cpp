@@ -188,6 +188,26 @@ int HealthMonitor::init_pmic()
 int HealthMonitor::init_ecg()
 {
     uint32_t all;
+    uint32_t id;
+    int part_version;
+
+    printf("init ecg\r\n");
+
+    /* the example app specifically states the id has to be read twice */
+    max30001.reg_read(MAX30001::INFO, &id);
+    max30001.reg_read(MAX30001::INFO, &id);
+
+    part_version = (id >> 12) & 0x3;
+    if (part_version == 0) {
+        printf("Device: MAX30004\r\n");
+    } else if (part_version == 1) {
+        printf("Device: MAX30001\r\n");
+    } else if (part_version == 2) {
+        printf("Device: MAX30002\r\n");
+    } else if (part_version == 3) {
+        printf("Device: MAX30003\r\n");
+    }
+
     max30001_InterruptB.disable_irq();
     max30001_Interrupt2B.disable_irq();
     max30001_InterruptB.mode(PullUp);
