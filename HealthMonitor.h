@@ -34,7 +34,10 @@ public:
     ~HealthMonitor();
     int init();
     bool read_spo2(uint32_t *spo2);
-    uint8_t read_hr();
+    float read_hr();
+
+    int start_ecg();
+    int stop_ecg();
 
 private:
     void read_ecg(uint8_t *data);

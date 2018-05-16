@@ -13,18 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "HealthMonitor.h"
 
 /// Initialization values for ECG_InitStart()
 #define EN_ECG 0b1
-#define OPENP 0b1
-#define OPENN 0b1
+#define OPENP 0b0
+#define OPENN 0b0
 #define POL 0b0
-#define CALP_SEL 0b10
-#define CALN_SEL 0b11
-#define E_FIT 31
-#define RATE 0b00
+#define CALP_SEL 0b0
+#define CALN_SEL 0b0
+#define E_FIT 0xf
+#define RATE 0b10
 #define GAIN 0b00
-#define DHPF 0b0
+#define DHPF 0b01
 #define DLPF 0b01
 /// Initialization values for CAL_InitStart()
 #define EN_VCAL 0b1
@@ -40,7 +41,7 @@
 #define RBIASN 0b1
 #define FMSTR 0b00
 
-#include "HealthMonitor.h"
+#define RTOR1 0x3fa300
 
 HealthMonitor::HealthMonitor()
     : i2c2(I2C2_SDA, I2C2_SCL),
@@ -185,9 +186,66 @@ int HealthMonitor::init_pmic()
     return result;
 }
 
-int HealthMonitor::init_ecg()
+int HealthMonitor::start_ecg()
 {
     uint32_t all;
+
+    max30001.reg_write(MAX30001::EN_INT, 3);
+    max30001.reg_write(MAX30001::EN_INT2, 3);
+    max30001.ECG_InitStart(0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
+                           0x0f, 0x02, 0x00, 0x01, 0x01);
+    max30001.RtoR_InitStart(0x01, 0x03, 0x0f, 0x02, 0x03,
+                            0x20, 0x02, 0x04, 0x01);
+    max30001.INT_assignment(
+        MAX30001::MAX30001_INT_B,  // en_enint_loc
+        MAX30001::MAX30001_NO_INT, // en_eovf_loc
+        MAX30001::MAX30001_NO_INT, // en_fstint_loc
+
+        MAX30001::MAX30001_INT_2B, // en_dcloffint_loc
+        MAX30001::MAX30001_INT_B, // en_bint_loc
+        MAX30001::MAX30001_NO_INT, // en_bovf_loc
+
+        MAX30001::MAX30001_INT_2B, // en_bover_loc
+        MAX30001::MAX30001_INT_2B, // en_bundr_loc
+        MAX30001::MAX30001_NO_INT, // en_bcgmon_loc
+
+        MAX30001::MAX30001_INT_B,  // en_pint_loc
+        MAX30001::MAX30001_NO_INT, // en_povf_loc,
+        MAX30001::MAX30001_NO_INT, // en_pedge_loc
+
+        MAX30001::MAX30001_INT_2B, // en_lonint_loc
+        MAX30001::MAX30001_INT_B,  // en_rrint_loc
+        MAX30001::MAX30001_NO_INT, //  en_samp_loc
+
+        MAX30001::MAX30001_INT_ODNR,  // intb_Type
+        MAX30001::MAX30001_INT_ODNR); // int2b_Type
+    //fifo_clear();
+    max30001.synch();
+    max30001.reg_read(MAX30001::STATUS, &all);
+    return 0;
+}
+
+int HealthMonitor::stop_ecg()
+{
+    uint32_t val;
+
+    max30001.reg_write(MAX30001::CNFG_GEN, 0x80004);
+
+    max30001.reg_read(MAX30001::CNFG_RTOR1, &val);
+    max30001.reg_read(MAX30001::CNFG_RTOR1, &val);
+    if (RTOR1 != val) {
+        max30001.reg_write(MAX30001::CNFG_RTOR1, RTOR1);
+    }
+
+    max30001.reg_write(MAX30001::EN_INT, 3);
+    max30001.reg_write(MAX30001::EN_INT2, 3);
+
+    return 0;
+}
+
+int HealthMonitor::init_ecg()
+{
+    uint32_t val;
     uint32_t id;
     int part_version;
 
@@ -225,38 +283,15 @@ int HealthMonitor::init_ecg()
     max30001.FCLK_MaximOnly();
     max30001.sw_rst();     // Do a software reset of the MAX30001
 
-    max30001.INT_assignment(
-        MAX30001::MAX30001_INT_B,  // en_enint_loc
-        MAX30001::MAX30001_NO_INT, // en_eovf_loc
-        MAX30001::MAX30001_NO_INT, // en_fstint_loc
+    max30001.reg_write(MAX30001::CNFG_EMUX, 0x0);
+    max30001.reg_write(MAX30001::CNFG_GEN, 0x80004);
 
-        MAX30001::MAX30001_INT_2B, // en_dcloffint_loc
-        MAX30001::MAX30001_INT_2B, // en_bint_loc
-        MAX30001::MAX30001_NO_INT, // en_bovf_loc
+    max30001.reg_read(MAX30001::CNFG_RTOR1, &val);
+    max30001.reg_read(MAX30001::CNFG_RTOR1, &val);
+    if (RTOR1 != val) {
+        max30001.reg_write(MAX30001::CNFG_RTOR1, RTOR1);
+    }
 
-        MAX30001::MAX30001_INT_2B, // en_bover_loc
-        MAX30001::MAX30001_INT_2B, // en_bundr_loc
-        MAX30001::MAX30001_NO_INT, // en_bcgmon_loc
-
-        MAX30001::MAX30001_INT_B,  // en_pint_loc
-        MAX30001::MAX30001_NO_INT, // en_povf_loc,
-        MAX30001::MAX30001_NO_INT, // en_pedge_loc
-
-        MAX30001::MAX30001_INT_2B, // en_lonint_loc
-        MAX30001::MAX30001_INT_B,  // en_rrint_loc
-        MAX30001::MAX30001_NO_INT, //  en_samp_loc
-
-        MAX30001::MAX30001_INT_ODNR,  // intb_Type
-        MAX30001::MAX30001_INT_ODNR); // int2b_Type
-
-    max30001.CAL_InitStart(EN_VCAL, VMODE, VMAG, FCAL, THIGH, FIFTY);
-    max30001.ECG_InitStart(EN_ECG, OPENP, OPENN, POL, CALP_SEL, CALN_SEL, E_FIT,
-                           RATE, GAIN, DHPF, DLPF);
-    max30001.RtoR_InitStart(0b1, 0b0011, 0b1111, 0b00, 0b0011, 0b000001, 0b00,
-                            0b000, 0b01);
-    max30001.Rbias_FMSTR_Init(EN_RBIAS, RBIASV, RBIASP, RBIASN, FMSTR);
-    max30001.synch();
-    max30001.reg_read(MAX30001::STATUS, &all);
     return 0;
 }
 
@@ -272,7 +307,7 @@ void HealthMonitor::read_ecg(uint8_t *data)
     }
 }
 
-uint8_t HealthMonitor::read_hr()
+float HealthMonitor::read_hr()
 {
     uint8_t data[4];
     read_ecg(data);
@@ -285,6 +320,5 @@ uint8_t HealthMonitor::read_hr()
     if (RtoR > 0.0f) {
         value = 60000.0f / (RtoR * t);
     }
-    // Round up
-    return (uint8_t)(value + 0.5);
+    return value;
 }
